@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>一元二次方程解题批改诊断 - 八年级数学</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- MathJax 3.x -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      svg: {
+        fontCache: 'global'
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      },
+      startup: {
+        ready: () => {
+          MathJax.startup.defaultReady();
+          MathJax.startup.promise.then(() => {
+            console.log('MathJax is ready');
+          });
+        }
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- 自定义样式 -->
+  <link rel="stylesheet" href="/static/css/solver.css">
+</head>
+<body class="text-slate-800">
+  <!-- 顶部标题栏 -->
+  <header class="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 text-white py-4 px-4 shadow-lg no-print">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+            <i data-lucide="calculator" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-xl md:text-2xl font-bold">一元二次方程解题批改诊断</h1>
+            <p class="text-blue-200 text-sm">八年级数学解题诊断与强化练习</p>
+          </div>
+        </div>
+        <button onclick="resetSystem()" class="no-print px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors flex items-center gap-2">
+          <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+          <span>重置</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    
+    <!-- 第一步：输入解题步骤 -->
+    <section id="step2Section" class="bg-white rounded-xl card-shadow-lg p-6 slide-in">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">1</div>
+        <h2 class="text-xl font-bold text-slate-800">输入解题步骤</h2>
+      </div>
+
+      <!-- 示例加载 -->
+      <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200 no-print">
+        <p class="text-sm text-blue-800 mb-2 font-medium">💡 快速体验：点击加载示例</p>
+        <div class="flex flex-wrap gap-2">
+          <button id="sampleFactorBtn" class="px-3 py-1.5 bg-white border border-blue-300 rounded-lg text-sm hover:bg-blue-50 transition-colors">
+            因式分解法
+          </button>
+          <button id="sampleSquareRootBtn" class="px-3 py-1.5 bg-white border border-blue-300 rounded-lg text-sm hover:bg-blue-50 transition-colors">
+            直接开平方法
+          </button>
+          <button id="sampleCompletingBtn" class="px-3 py-1.5 bg-white border border-blue-300 rounded-lg text-sm hover:bg-blue-50 transition-colors">
+            配方法
+          </button>
+          <button id="sampleFormulaBtn" class="px-3 py-1.5 bg-white border border-blue-300 rounded-lg text-sm hover:bg-blue-50 transition-colors">
+            公式法
+          </button>
+        </div>
+      </div>
+
+      <!-- 符号快捷输入面板 -->
+      <div class="mb-4 no-print">
+        <button id="toggleFormulaPanelBtn" class="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium mb-2">
+          <i data-lucide="chevron-down" class="w-4 h-4" id="panelToggleIcon"></i>
+          <span id="panelToggleText">展开</span>符号快捷输入
+        </button>
+        
+        <div id="formulaPanel" class="hidden p-3 bg-slate-50 rounded-lg border border-slate-200">
+          <!-- 第一行：运算符和特殊符号 -->
+          <div class="grid grid-cols-8 gap-1.5 mb-2">
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="+">+</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="-">−</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="=">=</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-action="square">( )²</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-action="sqrt">√</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="\\pm ">±</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="\\Delta">Δ</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-action="parentheses">( )</button>
+          </div>
+          <!-- 第二行：常用变量和表达式 -->
+          <div class="grid grid-cols-8 gap-1.5 mb-2">
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base font-serif italic" data-symbol="a">a</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base font-serif italic" data-symbol="b">b</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base font-serif italic" data-symbol="c">c</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base font-serif italic" data-symbol="x">x</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="x^2">x²</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="x_1">x₁</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="x_2">x₂</button>
+          </div>
+          <!-- 第三行：数字按钮 -->
+          <div class="grid grid-cols-10 gap-1.5">
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="0">0</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="1">1</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="2">2</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="3">3</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="4">4</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="5">5</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="6">6</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="7">7</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="8">8</button>
+            <button class="formula-btn px-2 py-1.5 bg-white border border-slate-300 rounded hover:border-blue-500 text-base" data-symbol="9">9</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 步骤输入容器 -->
+      <div id="stepsContainer" class="space-y-3 mb-4">
+        <!-- 动态添加的步骤将在这里 -->
+      </div>
+
+      <!-- 添加步骤按钮 -->
+      <button id="addStepBtn" class="w-full py-3 border-2 border-dashed border-blue-300 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 no-print">
+        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+        <span>添加步骤</span>
+      </button>
+
+      <!-- 实时预览 -->
+      <div class="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+        <h3 class="text-sm font-semibold text-slate-700 mb-2">📝 实时预览</h3>
+        <div id="previewArea" class="min-h-[60px]">
+          <p class="text-slate-400 text-sm italic">输入内容后将在这里预览渲染效果</p>
+        </div>
+      </div>
+
+      <!-- 提交按钮 -->
+      <div class="mt-6 flex gap-3 no-print">
+        <button id="diagnoseBtn" class="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold shadow-lg transition-all flex items-center justify-center gap-2">
+          <i data-lucide="check-circle" class="w-5 h-5"></i>
+          <span>提交批改</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 第二步：诊断报告 -->
+    <section id="reportSection" class="bg-white rounded-xl card-shadow-lg p-6 hidden slide-in">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold">2</div>
+        <h2 class="text-xl font-bold text-slate-800">诊断报告</h2>
+      </div>
+
+      <!-- 整体判定 -->
+      <div id="overallResult" class="mb-6">
+        <!-- 动态填充 -->
+      </div>
+
+      <!-- 详细诊断信息 -->
+      <div class="space-y-4">
+        <!-- 错误定位 -->
+        <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <h3 class="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+            <i data-lucide="map-pin" class="w-4 h-4"></i>
+            错误精准定位
+          </h3>
+          <div id="errorLocation">
+            <p class="text-slate-500">—</p>
+          </div>
+        </div>
+
+        <!-- 错误类型 -->
+        <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <h3 class="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+            <i data-lucide="tag" class="w-4 h-4"></i>
+            错误原因归类
+          </h3>
+          <div id="errorClassification">
+            <p class="text-slate-500">—</p>
+          </div>
+        </div>
+
+        <!-- 详细提示 -->
+        <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <h3 class="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+            <i data-lucide="lightbulb" class="w-4 h-4"></i>
+            详细诊断信息
+          </h3>
+          <div id="detailedDiagnosis">
+            <p class="text-slate-500">暂无更多信息。</p>
+          </div>
+        </div>
+
+        <!-- 强化练习 -->
+        <div class="p-4 bg-gradient-to-br from-orange-50 to-yellow-50 rounded-lg border border-orange-200">
+          <h3 class="font-semibold text-orange-800 mb-2 flex items-center gap-2">
+            <i data-lucide="book-open" class="w-4 h-4"></i>
+            个性化强化练习
+          </h3>
+          <div id="practiceQuestions">
+            <p class="text-slate-500">暂无推荐题目。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="mt-8 py-6 text-center text-slate-500 text-sm no-print">
+    <p>© 2026 一元二次方程解题批改诊断系统</p>
+  </footer>
+
+  <!-- 引入JavaScript模块 -->
+  <script src="/static/js/utils.js"></script>
+  <script src="/static/js/editor.js"></script>
+  <script src="/static/js/solver.js"></script>
+</body>
+</html>
