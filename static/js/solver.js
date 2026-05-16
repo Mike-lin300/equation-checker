@@ -140,11 +140,16 @@ function renderReport(result, steps) {
   const practiceDiv = document.getElementById('practiceQuestions');
   if (practiceDiv) {
     if (result.exercises && result.exercises.length > 0) {
-      let html = '<ol class="list-decimal list-inside space-y-2">';
-      result.exercises.forEach(q => {
-        html += `<li class="text-slate-700">$$${convertToLatex(q)}$$</li>`;
+      let html = '<div class="space-y-3">';
+      result.exercises.forEach((q, index) => {
+        html += `
+          <div class="flex items-start gap-2 p-2 bg-white rounded border border-orange-100">
+            <span class="flex-shrink-0 w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold">${index + 1}</span>
+            <div class="flex-1 text-slate-700 pt-0.5">$$${convertToLatex(q)}$$</div>
+          </div>
+        `;
       });
-      html += '</ol>';
+      html += '</div>';
       practiceDiv.innerHTML = html;
       // 重新渲染 LaTeX
       if (window.MathJax && MathJax.typesetPromise) {

@@ -7,30 +7,72 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)  # 允许前端跨域请求
 
-# API_KEY = "sk-c52c2f25eb064559a13e4069ec2131e5"
 API_KEY = os.getenv("DEEPSEEK_API_KEY")
 if not API_KEY:
     raise Exception("请在环境变量中设置 DEEPSEEK_API_KEY")
 
-# 提示词模板（把用户步骤设为占位符）
+# 提示词
 SYSTEM_PROMPT = """
-你是初中数学教师，负责批改一元二次方程解题过程。用户会按顺序给出解题步骤，每行一步。请判断：
-1. 整个过程是否正确。
-2. 如果错误，指出哪一步到哪一步出了问题，并归类错误类型（如：移项变号错误、因式分解错误、配方法出错、公式法b²-4ac计算错误、开方丢根、舍根不当等）。
-3. 如果正确，输出"完全正确"。
-4. 最后，如果出错，推荐3道同类的一元二次方程练习题，只给题目，不包含解答。
-输出格式：严格JSON对象，包含字段：correct(布尔), error_step(字符串), error_type(字符串), hint(字符串), exercises(字符串数组，3个题目)。
+你是初中数学教师，负责批改一元二次方程的解题过程。用户会按顺序给出解题步骤，每行一步，行号从1开始。
+
+请按以下流程判断并输出JSON：
+
+1. 先判断解题是否完整，检查最后一行是否有根的结果如（x_1=...,x_2=...），如果不完整，应该判定错误
+给出未完成示例：
+输入：
+第1步：x²-5x+6=0
+第2步：(x-2)(x-3)=0
+第3步：x-2=0或x-3=0
+判定输出：
+{
+  "correct": false,
+  "error_step": "-",
+  "error_type": "解题未完成",
+  "hint": "解题未完成：已分解成两个因式，但未写出x=2和x=3，请补充最终解。",
+  "exercises": []
+}
+完整后，再判断是否正确。
+
+2. 如果错误：
+   - 指出第一个关键错误发生的步骤（如 "第2步" 或 "第2步到第3步"）。
+   - 从下方"错误类型列表"中选择最匹配的一类，填写error_type。
+   - 在 hint 中详细说明：具体哪里错了、为什么错、正确的做法是什么。
+   - 推荐3道与该错误类型相关、难度适合的同类一元二次方程练习题（只给题目，不包含解答）。
+3. 如果完全正确且完整：
+   - correct 为 true
+   - error_step、error_type 和 hint 设为空字符串 ""
+   - exercises 设为空数组 []
+
+输出格式为严格的JSON对象，包含以下字段：
+{
+  "correct": boolean,
+  "error_step": string,     // 例如 "第2步" 或 "第2步到第3步"，正确时为空字符串
+  "error_type": string,     // 从下方错误类型列表中选择，正确时为空字符串
+  "hint": string,           // 错误的详细解释和修正建议，正确时为空字符串
+  "exercises": [string, string, string]  // 正确时为空数组
+}
+
+"错误类型列表（请严格使用以下分类名称）":
+[
+  "步骤缺失或未完成",
+  "符号或移项错误",
+  "因式分解错误",
+  "配方错误",
+  "公式法应用错误",
+  "根求解不完整或丢失"
+  "其他错误类型"
+]
 """
 
 
 @app.route('/')
-def index():
-    return app.send_static_file('index.html')
-
-
-@app.route('/solver')
 def solver():
     return app.send_static_file('solver.html')
+
+
+@app.route('/demo')
+def index():
+    return app.send_static_file('index.html')
 
 
 @app.route('/api/check', methods=['POST'])
