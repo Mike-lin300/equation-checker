@@ -91,6 +91,9 @@ function bindEditorEvents() {
   if (resetBtn) {
     resetBtn.addEventListener('click', resetSystem);
   }
+  
+  // 7. OCR 相关事件
+  initOcrEvents();
 }
 
 /**
@@ -621,6 +624,232 @@ function resetSystem() {
   const step2Section = document.getElementById('step2Section');
   if (step2Section) {
     step2Section.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+/**
+ * 初始化 OCR 相关事件
+ */
+function initOcrEvents() {
+  const ocrBtn = document.getElementById('ocrBtn');
+  const closeOcrBtn = document.getElementById('closeOcrBtn');
+  const ocrSection = document.getElementById('ocrSection');
+  const ocrUploadZone = document.getElementById('ocrUploadZone');
+  const ocrImageInput = document.getElementById('ocrImageInput');
+  const ocrRemoveImage = document.getElementById('ocrRemoveImage');
+  const ocrRecognizeBtn = document.getElementById('ocrRecognizeBtn');
+  const useOcrResultBtn = document.getElementById('useOcrResultBtn');
+  
+  let currentOcrImageFile = null;
+  let ocrResultText = '';
+  
+  // 打开 OCR 面板
+  if (ocrBtn) {
+    ocrBtn.addEventListener('click', () => {
+      ocrSection.classList.remove('hidden');
+      ocrSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
+  
+  // 关闭 OCR 面板
+  if (closeOcrBtn) {
+    closeOcrBtn.addEventListener('click', () => {
+      ocrSection.classList.add('hidden');
+      resetOcrForm();
+    });
+  }
+  
+  // 点击上传区域
+  if (ocrUploadZone) {
+    ocrUploadZone.addEventListener('click', () => {
+      if (!currentOcrImageFile) {
+        ocrImageInput.click();
+      }
+    });
+  }
+  
+  // 文件选择
+  if (ocrImageInput) {
+    ocrImageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        handleOcrImageFile(file);
+      }
+    });
+  }
+  
+  // 拖拽事件
+  if (ocrUploadZone) {
+    ocrUploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      ocrUploadZone.classList.add('dragover');
+    });
+    
+    ocrUploadZone.addEventListener('dragleave', () => {
+      ocrUploadZone.classList.remove('dragover');
+    });
+    
+    ocrUploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      ocrUploadZone.classList.remove('dragover');
+      
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        handleOcrImageFile(file);
+      }
+    });
+  }
+  
+  // 移除图片
+  if (ocrRemoveImage) {
+    ocrRemoveImage.addEventListener('click', (e) => {
+      e.stopPropagation();
+      resetOcrForm();
+    });
+  }
+  
+  // 处理图片文件
+  function handleOcrImageFile(file) {
+    currentOcrImageFile = file;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const previewImg = document.getElementById('ocrPreviewImg');
+      const uploadPlaceholder = document.getElementById('ocrUploadPlaceholder');
+      const imagePreview = document.getElementById('ocrImagePreview');
+      
+      previewImg.src = e.target.result;
+      uploadPlaceholder.classList.add('hidden');
+      imagePreview.classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+  }
+  
+  // 重置 OCR 表单
+  function resetOcrForm() {
+    currentOcrImageFile = null;
+    ocrResultText = '';
+    ocrImageInput.value = '';
+    
+    const uploadPlaceholder = document.getElementById('ocrUploadPlaceholder');
+    const imagePreview = document.getElementById('ocrImagePreview');
+    const resultSection = document.getElementById('ocrResultSection');
+    
+    uploadPlaceholder.classList.remove('hidden');
+    imagePreview.classList.add('hidden');
+    resultSection.classList.add('hidden');
+  }
+  
+  // 开始识别
+  if (ocrRecognizeBtn) {
+    ocrRecognizeBtn.addEventListener('click', async () => {
+      if (!currentOcrImageFile) {
+        showToast('请先上传图片！', 'error');
+        return;
+      }
+      
+      const loadingState = document.getElementById('ocrLoadingState');
+      const resultContent = document.getElementById('ocrResultContent');
+      const errorState = document.getElementById('ocrErrorState');
+      const resultText = document.getElementById('ocrResultText');
+      const errorMessage = document.getElementById('ocrErrorMessage');
+      
+      // 显示加载状态
+      document.getElementById('ocrResultSection').classList.remove('hidden');
+      loadingState.classList.remove('hidden');
+      resultContent.classList.add('hidden');
+      errorState.classList.add('hidden');
+      ocrRecognizeBtn.disabled = true;
+      
+      try {
+        // 准备表单数据
+        const formData = new FormData();
+        formData.append('image', currentOcrImageFile);
+        
+        // 发送请求（不再传递 prompt 参数）
+        const response = await fetch('/api/ocr', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || '识别失败');
+        }
+        
+        // 显示结果
+        ocrResultText = data.result;
+        resultText.textContent = data.result;
+        
+        loadingState.classList.add('hidden');
+        resultContent.classList.remove('hidden');
+        
+      } catch (error) {
+        loadingState.classList.add('hidden');
+        errorState.classList.remove('hidden');
+        errorMessage.textContent = error.message;
+      } finally {
+        ocrRecognizeBtn.disabled = false;
+      }
+    });
+  }
+  
+  // 使用识别结果填充步骤
+  if (useOcrResultBtn) {
+    useOcrResultBtn.addEventListener('click', () => {
+      if (!ocrResultText) {
+        showToast('没有可使用的识别结果', 'error');
+        return;
+      }
+      
+      // 清空现有步骤
+      const container = document.getElementById('stepsContainer');
+      if (container) {
+        container.innerHTML = '';
+      }
+      
+      // 按行分割识别结果，并进行清理
+      const lines = ocrResultText
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => {
+          // 过滤空行
+          if (!line) return false;
+          // 过滤可能的多余说明文字（如“识别结果”、“以下是...”等）
+          const skipPatterns = [
+            /^识别结果[:：]?$/,
+            /^以下是[:：]?$/,
+            /^我识别到的内容[:：]?$/,
+            /^识别到的解题步骤[:：]?$/,
+            /^输出结果[:：]?$/,
+            /^result[:：]?$/i,
+            /^recognized content[:：]?$/i
+          ];
+          return !skipPatterns.some(pattern => pattern.test(line));
+        });
+      
+      if (lines.length === 0) {
+        showToast('识别结果为空或格式不正确', 'error');
+        return;
+      }
+      
+      // 添加每个步骤
+      lines.forEach(line => {
+        addStep(line);
+      });
+      
+      // 关闭 OCR 面板
+      ocrSection.classList.add('hidden');
+      resetOcrForm();
+      
+      showToast(`已填充 ${lines.length} 个步骤`, 'success');
+      
+      // 滚动到步骤区域
+      if (container) {
+        container.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
   }
 }
 
