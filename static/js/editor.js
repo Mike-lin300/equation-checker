@@ -839,6 +839,20 @@ function initOcrEvents() {
         addStep(line);
       });
       
+      // 强制更新总预览和 MathJax 渲染
+      setTimeout(() => {
+        if (typeof updateTotalPreview === 'function') {
+          updateTotalPreview();
+        }
+        // 重新渲染数学公式
+        if (window.MathJax && MathJax.typesetPromise) {
+          const previewArea = document.getElementById('previewArea');
+          if (previewArea) {
+            MathJax.typesetPromise([previewArea]).catch(console.warn);
+          }
+        }
+      }, 100);
+      
       // 关闭 OCR 面板
       ocrSection.classList.add('hidden');
       resetOcrForm();
